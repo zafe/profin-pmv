@@ -39,7 +39,7 @@ public class FaceDetection extends Application
 			scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
 			// create the stage with the given title and the previously created
 			// scene
-			primaryStage.setTitle("Face Detection and Tracking");
+			primaryStage.setTitle("PMV Detector de Rostros");
 			primaryStage.setScene(scene);
 			// show the GUI
 			primaryStage.show();

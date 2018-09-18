@@ -1,14 +1,17 @@
 package it.polito.teaching.cv;
 
+import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfRect;
+import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
 import org.opencv.objdetect.Objdetect;
@@ -38,6 +41,8 @@ public class FaceDetectionController
 	// FXML buttons
 	@FXML
 	private Button cameraButton;
+	@FXML
+	private Button entrenarButton;
 	// the FXML area for showing the current frame
 	@FXML
 	private ImageView originalFrame;
@@ -57,6 +62,8 @@ public class FaceDetectionController
 	// face cascade classifier
 	private CascadeClassifier faceCascade;
 	private int absoluteFaceSize;
+	
+	private int numeroImagen = 0;
 	
 	/**
 	 * Init the controller, at start time
@@ -92,7 +99,6 @@ public class FaceDetectionController
 			if (this.capture.isOpened())
 			{
 				this.cameraActive = true;
-				
 				// grab a frame every 33 ms (30 frames/sec)
 				Runnable frameGrabber = new Runnable() {
 					
@@ -103,6 +109,7 @@ public class FaceDetectionController
 						Mat frame = grabFrame();
 						// convert and show the frame
 						Image imageToShow = Utils.mat2Image(frame);
+						
 						updateImageView(originalFrame, imageToShow);
 					}
 				};
@@ -111,7 +118,7 @@ public class FaceDetectionController
 				this.timer.scheduleAtFixedRate(frameGrabber, 0, 33, TimeUnit.MILLISECONDS);
 				
 				// update the button content
-				this.cameraButton.setText("Stop Camera");
+				this.cameraButton.setText("Detener Camara");
 			}
 			else
 			{
@@ -124,7 +131,7 @@ public class FaceDetectionController
 			// the camera is not active at this point
 			this.cameraActive = false;
 			// update again the button content
-			this.cameraButton.setText("Start Camera");
+			this.cameraButton.setText("Detener Camara");
 			// enable classifiers checkboxes
 			this.haarClassifier.setDisable(false);
 			this.lbpClassifier.setDisable(false);
@@ -132,6 +139,21 @@ public class FaceDetectionController
 			// stop the timer
 			this.stopAcquisition();
 		}
+	}
+	
+	
+	//Tomar foto para entrenar
+	@FXML
+	protected void takePhoto(){
+		
+	      Imgcodecs imageCodecs = new Imgcodecs(); 
+
+	      String file2 = "/Users/fernando/Desktop/entrenamiento/imagen-"+ numeroImagen +".jpg"; 
+	      Mat matrix = grabFrame();
+	      imageCodecs.imwrite(file2, matrix); 
+	      System.out.println("Imagen guardada");
+	      numeroImagen++;
+		
 	}
 	
 	/**
@@ -201,9 +223,22 @@ public class FaceDetectionController
 				
 		// each rectangle in faces is a face: draw them!
 		Rect[] facesArray = faces.toArray();
-		for (int i = 0; i < facesArray.length; i++)
+		Point centerPoint;
+		
+		for (int i = 0; i < facesArray.length; i++){
+			double x_Axis = facesArray[i].tl().x + ((facesArray[i].br().x - facesArray[i].tl().x)/2);
+		    double y_Axis = facesArray[i].tl().y + (facesArray[i].height/2);
+		    
+		    centerPoint = new Point(x_Axis, y_Axis);
+		   
+		    System.out.println("\n tl x: " + facesArray[i].tl().x + " y: " + facesArray[i].tl().y);
+		    System.out.println(" br x: " + facesArray[i].br().x + " y: " + facesArray[i].br().y);
+		    System.out.println(" x: " + centerPoint.x + " y: " + centerPoint.y);
+
+
+			Imgproc.circle(frame, centerPoint, (int) (( facesArray[i].br().x - facesArray[i].tl().x)/2), new Scalar(0,255,0),3);
 			Imgproc.rectangle(frame, facesArray[i].tl(), facesArray[i].br(), new Scalar(0, 255, 0), 3);
-			
+		}
 	}
 	
 	/**
@@ -218,6 +253,7 @@ public class FaceDetectionController
 			this.lbpClassifier.setSelected(false);
 			
 		this.checkboxSelection("resources/haarcascades/haarcascade_frontalface_alt.xml");
+
 	}
 	
 	/**
