@@ -22,6 +22,7 @@ import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
@@ -51,6 +52,8 @@ public class FaceDetectionController
 	private CheckBox haarClassifier;
 	@FXML
 	private CheckBox lbpClassifier;
+	@FXML
+	private TextField nombrePersonaTextField;
 	
 	// a timer for acquiring the video stream
 	private ScheduledExecutorService timer;
@@ -63,6 +66,7 @@ public class FaceDetectionController
 	private CascadeClassifier faceCascade;
 	private int absoluteFaceSize;
 	
+	private String nombrePersona = "persona";
 	private int numeroImagen = 0;
 	
 	/**
@@ -147,11 +151,11 @@ public class FaceDetectionController
 	protected void takePhoto(){
 		
 	      Imgcodecs imageCodecs = new Imgcodecs(); 
-
-	      String file2 = "/Users/fernando/Desktop/entrenamiento/imagen-"+ numeroImagen +".jpg"; 
+	      nombrePersona = nombrePersonaTextField.getText();
+	      String file2 = "/Users/fernando/Desktop/entrenamiento/"+ nombrePersona +"-"+ numeroImagen +".jpg"; 
 	      Mat matrix = grabFrame();
 	      imageCodecs.imwrite(file2, matrix); 
-	      System.out.println("Imagen guardada");
+	      System.out.println("Imagen guardada de " + nombrePersona);
 	      numeroImagen++;
 		
 	}

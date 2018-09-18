@@ -35,15 +35,17 @@
    </children>
 		</VBox>
 	</center>
-	<bottom>
-		<HBox alignment="CENTER">
-			<padding>
-				<Insets bottom="25" left="25" right="25" top="25" />
-			</padding>
-   <children>
-   			<Button fx:id="cameraButton" alignment="center" disable="true" onAction="#startCamera" text="Iniciar Cámara" />
-            <Button fx:id="entrenarButton" mnemonicParsing="false" onAction="#takePhoto" text="Fotografiar rostro" />
-   </children>
-		</HBox>
-	</bottom>
+   <bottom>
+      <VBox prefHeight="64.0" prefWidth="355.0" BorderPane.alignment="CENTER">
+         <children>
+            <Button fx:id="cameraButton" alignment="center" disable="true" onAction="#startCamera" text="Iniciar Cámara" />
+            <HBox prefHeight="37.0" prefWidth="287.0">
+               <children>
+                  <TextField fx:id="nombrePersonaTextField" promptText="Nombre Persona" />
+                  <Button fx:id="entrenarButton" mnemonicParsing="false" onAction="#takePhoto" prefHeight="27.0" prefWidth="174.0" text="Fotografiar rostro" />
+               </children>
+            </HBox>
+         </children>
+      </VBox>
+   </bottom>
 </BorderPane>
