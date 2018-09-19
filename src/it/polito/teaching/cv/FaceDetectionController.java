@@ -1,16 +1,28 @@
 package it.polito.teaching.cv;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import javax.xml.transform.Source;
+
+import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfInt;
 import org.opencv.core.MatOfRect;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
+import org.opencv.face.FaceRecognizer;
+import org.opencv.face.LBPHFaceRecognizer;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
@@ -43,7 +55,11 @@ public class FaceDetectionController
 	@FXML
 	private Button cameraButton;
 	@FXML
+	private Button fotografiarButton;
+	@FXML
 	private Button entrenarButton;
+	@FXML
+	private Button reconocerButton;
 	// the FXML area for showing the current frame
 	@FXML
 	private ImageView originalFrame;
@@ -68,6 +84,12 @@ public class FaceDetectionController
 	
 	private String nombrePersona = "persona";
 	private int numeroImagen = 0;
+	
+	FaceRecognizer faceRecognizer = LBPHFaceRecognizer.create(); 
+	int banderaEntrenada  = 0;
+	List<String> namesIndexList = new ArrayList<>();
+
+
 	
 	/**
 	 * Init the controller, at start time
@@ -150,11 +172,46 @@ public class FaceDetectionController
 	@FXML
 	protected void takePhoto(){
 		
-	      Imgcodecs imageCodecs = new Imgcodecs(); 
 	      nombrePersona = nombrePersonaTextField.getText();
 	      String file2 = "/Users/fernando/Desktop/entrenamiento/"+ nombrePersona +"-"+ numeroImagen +".jpg"; 
 	      Mat matrix = grabFrame();
-	      imageCodecs.imwrite(file2, matrix); 
+	      
+	      MatOfRect faces = new MatOfRect();
+	      Mat grayFrame = new Mat();
+			
+		  // convert the frame in gray scale
+		  Imgproc.cvtColor(matrix, grayFrame, Imgproc.COLOR_BGR2GRAY);
+		  // equalize the frame histogram to improve the result
+		  Imgproc.equalizeHist(grayFrame, grayFrame);
+			
+		  // compute minimum face size (20% of the frame height, in our case)
+		  if (this.absoluteFaceSize == 0)
+			{
+				int height = grayFrame.rows();
+				if (Math.round(height * 0.2f) > 0)
+				{
+					this.absoluteFaceSize = Math.round(height * 0.2f);
+				}
+			}
+			
+			// detect faces
+			this.faceCascade.detectMultiScale(grayFrame, faces, 1.1, 2, 0 | Objdetect.CASCADE_SCALE_IMAGE,
+					new Size(this.absoluteFaceSize, this.absoluteFaceSize), new Size());
+					
+			// each rectangle in faces is a face: draw them!
+			Rect[] facesArray = faces.toArray();
+			
+			for (int i = 0; i < facesArray.length; i++){
+				
+				
+					Mat mat =	matrix.submat(facesArray[i]);		
+				  
+			      Imgcodecs.imwrite(file2, mat); 
+
+			}
+	      
+	      
+	      
 	      System.out.println("Imagen guardada de " + nombrePersona);
 	      numeroImagen++;
 		
@@ -230,6 +287,8 @@ public class FaceDetectionController
 		Point centerPoint;
 		
 		for (int i = 0; i < facesArray.length; i++){
+			
+			/*
 			double x_Axis = facesArray[i].tl().x + ((facesArray[i].br().x - facesArray[i].tl().x)/2);
 		    double y_Axis = facesArray[i].tl().y + (facesArray[i].height/2);
 		    
@@ -241,9 +300,76 @@ public class FaceDetectionController
 
 
 			Imgproc.circle(frame, centerPoint, (int) (( facesArray[i].br().x - facesArray[i].tl().x)/2), new Scalar(0,255,0),3);
+			*/
 			Imgproc.rectangle(frame, facesArray[i].tl(), facesArray[i].br(), new Scalar(0, 255, 0), 3);
+			
+			if(nombrePersonaTextField.getText() != ""){
+				
+				Imgproc.putText(frame, 
+						nombrePersonaTextField.getText(), 							//text
+						facesArray[i].tl(), 				//origin point
+						Core.FONT_HERSHEY_TRIPLEX,   //fontFace
+						2, 									//fontScale
+						new Scalar(0,255,0)); 				//color
+				
+			}
+			
+			
+			//reconoce los rostros
+			if(banderaEntrenada == 1){
+					Mat mat =	frame.submat(facesArray[i]);		
+					Imgproc.cvtColor(mat, mat, Imgproc.COLOR_BGR2GRAY); // Convert image to grayscale or it won't work
+					String nombre = namesIndexList.get(faceRecognizer.predict_label(mat));
+					System.out.println("Rostro reconocido: " + nombre);
+					
+					Imgproc.putText(frame, 
+							nombre, 							//text
+							facesArray[i].tl(), 				//origin point
+							Core.FONT_HERSHEY_COMPLEX,   //fontFace
+							4, 									//fontScale
+							new Scalar(255,255,0)); 
 		}
+			
+			
+		}
+		
+		
+		}
+	
+	@FXML
+	protected void trainRecognizer(){
+		
+		
+		Path path = Paths.get("/Users/fernando/Desktop/entrenamiento/");
+		ArrayList<Mat> sourceImages = new ArrayList<>();
+		List<Integer> namesIntList = new ArrayList<>();
+		try {
+			Files.list(path).forEach(file -> {
+			    String filename = file.getFileName().toString();
+			    if (filename.contains("-") && filename.endsWith("jpg")){
+			        String personName = filename.substring(0, filename.indexOf("-")); // e.g. edd from edd-1.jpg
+			        if (!namesIndexList.contains(personName)){
+			            namesIndexList.add(personName);
+			        }
+			        Mat image = Imgcodecs.imread(file.toString());
+			        Imgproc.cvtColor(image, image, Imgproc.COLOR_BGR2GRAY); // Convert image to grayscale or it won't work with the face learner
+			        sourceImages.add(image);
+			        namesIntList.add(namesIndexList.indexOf(personName));
+			    }
+			});
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		MatOfInt matOfInt = new MatOfInt();
+		matOfInt.fromList(namesIntList);
+		faceRecognizer.train(sourceImages, matOfInt);
+		
+		banderaEntrenada = 1;
+		
 	}
+	
+	
 	
 	/**
 	 * The action triggered by selecting the Haar Classifier checkbox. It loads

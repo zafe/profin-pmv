@@ -38,11 +38,17 @@
    <bottom>
       <VBox prefHeight="64.0" prefWidth="355.0" BorderPane.alignment="CENTER">
          <children>
-            <Button fx:id="cameraButton" alignment="center" disable="true" onAction="#startCamera" text="Iniciar Cámara" />
+            <HBox prefHeight="100.0" prefWidth="200.0">
+               <children>
+                  <Button fx:id="cameraButton" alignment="center" disable="true" onAction="#startCamera" text="Iniciar Cámara" />
+                  <Button fx:id="entrenarButton" mnemonicParsing="false" onAction="#trainRecognizer" text="Entrenar" />
+                  <Button fx:id="reconocerButton" mnemonicParsing="false" text="Reconocer" />
+               </children>
+            </HBox>
             <HBox prefHeight="37.0" prefWidth="287.0">
                <children>
                   <TextField fx:id="nombrePersonaTextField" promptText="Nombre Persona" />
-                  <Button fx:id="entrenarButton" mnemonicParsing="false" onAction="#takePhoto" prefHeight="27.0" prefWidth="174.0" text="Fotografiar rostro" />
+                  <Button fx:id="fotografiarButton" mnemonicParsing="false" onAction="#takePhoto" prefHeight="27.0" prefWidth="174.0" text="Fotografiar rostro" />
                </children>
             </HBox>
          </children>
